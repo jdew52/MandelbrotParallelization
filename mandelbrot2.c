@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <complex.h>
 #include <math.h>
-#include <time.h>
 #include <omp.h>
 
 int isMandelbrot(double complex c){
@@ -15,36 +14,30 @@ int isMandelbrot(double complex c){
 
 int main(void){
 	FILE *validPoints = fopen("mandelbrotPoints.txt", "w");
-	int i, j;
+	int i;
 	// inc is value to increment real/imaginary parts of c in loop
 	double upperBound = 2.0, lowerBound = -2.0;
 	double inc = 1.0;
 	int limit = 0;
-	// try to find an elegant O(1) method for limit
-	//int test = (upperBound - lowerBound) / inc;
 	for (double d = -2.0; d <= 2.0; d += inc){
 		limit += 1;
 	}
-	// rl is the real part of the complex number
+	// rl is the real part of the complex number, img is the imaginary part
 	double rl = -2.0, img;
-	// i counts goes through the number of iterations necessary to get from -2 to 2 with the given inc value
+	// start stores the time in which the generation of points starts
 	double start = omp_get_wtime();
-	for (i = 0; i < limit; i++){
-		img = -2.0;
-		for (j = 0; j < limit; j++){
-			double complex c = rl + img * I;
-			printf("Point: %.3lf + %.3lf\n", rl, img);
-			if (isMandelbrot(c)){
-				//printf("Point %.3lf + %.3lf: Yes\n", creal(c), cimag(c));
-				fprintf(validPoints, "%.3lf + %.3lf\n", creal(c), cimag(c));
-			}
-			img += inc;
-			t++;
+	// The for loop iterates from 0 to number of points to generate
+	// Both the real and imaginary part of the imaginary number are determined
+	// from i.
+	for (i = 0; i < limit*limit; i++){
+		rl = lowerBound + (i / limit) * inc;
+		img = lowerBound + (i % limit) * inc;
+		double complex c = rl + img * I;
+		if (isMandelbrot(c)){
+			fprintf(validPoints, "%.3lf + %.3lf\n", creal(c), cimag(c));
 		}
-		rl += inc;
 	}
 	printf("Runtime: %lf\n", omp_get_wtime() - start);
-	//printf("Limit: %d\n", limit);
 	fclose(validPoints);
 	return 0;
 }
